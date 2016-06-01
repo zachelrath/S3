@@ -27,6 +27,7 @@
     "babel-plugin-transform-es2015-parameters": "^6.2.0",
     "bucketclient": "scality/bucketclient#rel/1.0",
     "node-uuid": "^1.4.3",
+    "ready-set-stream": "LaurenSpiegel/ReadySetStream",
     "sproxydclient": "scality/sproxydclient#rel/1.0",
     "utf8": "~2.1.1",
     "vaultclient": "scality/vaultclient#rel/1.0",
