@@ -29,7 +29,7 @@
     "bucketclient": "scality/bucketclient#rel/1.0",
     "bunyan-logstash": "^0.3.4",
     "node-uuid": "^1.4.3",
-    "sproxydclient": "scality/sproxydclient#rel/1.0",
+    "sproxydclient": "scality/sproxydclient#ft/passKey",
     "utf8": "~2.1.1",
     "vaultclient": "scality/vaultclient#rel/1.0",
     "werelogs": "scality/werelogs#rel/1.0",
