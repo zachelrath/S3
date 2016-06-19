@@ -17,6 +17,11 @@
                           "s3-fips-us-gov-west-1.amazonaws.com"],
         "localregion": ["localhost"]
     },
+    "versioning": {
+        "masterPrefix": "A",
+        "versionPrefix": "V",
+        "separator": "|"
+    },
     "sproxyd": {
         "bootstrap": ["localhost:8181"]
     },
