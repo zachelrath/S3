@@ -8,10 +8,10 @@ const parseString = require('xml2js').parseString;
 require('babel-core/register');
 const conf = require('../../../lib/Config').default;
 
-const transport = conf.https ? 'https' : 'http';
+const transport = conf.serviceHttps ? 'https' : 'http';
 let sslArguments = ['-s'];
-if (conf.https && conf.https.ca) {
-    sslArguments = ['-s', '--cacert', conf.httpsPath.ca];
+if (conf.serviceHttps && conf.serviceHttps.ca) {
+    sslArguments = ['-s', '--cacert', conf.serviceHttpsPath.ca];
 }
 const ipAddress = process.env.IP ? process.env.IP : '127.0.0.1';
 const program = `${__dirname}/s3curl.pl`;

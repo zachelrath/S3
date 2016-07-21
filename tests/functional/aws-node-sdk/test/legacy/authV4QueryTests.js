@@ -8,10 +8,10 @@ import conf from '../../../../../lib/Config';
 
 const random = Math.round(Math.random() * 100).toString();
 const bucket = `mybucket-${random}`;
-const ssl = conf.https;
+const ssl = conf.serviceHttps;
 let transportArgs = ['-s'];
 if (ssl && ssl.ca) {
-    transportArgs = ['-s', '--cacert', conf.httpsPath.ca];
+    transportArgs = ['-s', '--cacert', conf.serviceHttpsPath.ca];
 }
 
 // Get stdout and stderr stringified
