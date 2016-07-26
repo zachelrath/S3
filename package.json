@@ -35,7 +35,7 @@
     "sproxydclient": "scality/sproxydclient",
     "utf8": "~2.1.1",
     "vaultclient": "scality/vaultclient",
-    "werelogs": "scality/werelogs",
+    "werelogs": "scality/werelogs#test-dependency-patcher",
     "xml": "~1.0.0",
     "xml2js": "~0.4.12"
   },
