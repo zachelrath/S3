@@ -10,6 +10,7 @@ require('babel-core/register')({
         filename.startsWith(`${__dirname}/node_modules/utapi/router/`) ||
         filename.startsWith(`${__dirname}/node_modules/utapi/responses/`) ||
         filename.startsWith(`${__dirname}/node_modules/utapi/validators/`) ||
-        filename.startsWith(`${__dirname}/node_modules/utapi/handlers/`)),
+        filename.startsWith(`${__dirname}/node_modules/utapi/handlers/`) ||
+        filename.startsWith(`${__dirname}/node_modules/cdmiclient/lib/`)),
 });
 require('./lib/server.js').default();
