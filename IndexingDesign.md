@@ -22,15 +22,14 @@ metadata:
 | Content-MD5 | Base64-encoded 128-bit MD5 digest of the object |
 | Access Control List (ACL)| Defines which accounts/groups are granted access and the type of access |
 
-* **User-defined metadata** can be optionally assigned to an object. They are formatted as key-value pairs. When uploading an
-object using the REST API, each user-defined metadata attribute is created by adding an HTTP header that begins 
-```x-amz-meta-```. For example, the header ```x-amz-meta-location:Paris``` specifies the key-value attribute 
-```location:Paris```. We refer to user-defined metadata as tags.
+* **User-defined metadata** can be optionally assigned to an object. They are formatted as key-value pairs. When uploading an object using the REST API, each user-defined metadata attribute is created by adding an HTTP header that begins 
+`x-amz-meta-`. For example, the header `x-amz-meta-location:Paris` specifies the key-value attribute 
+`location:Paris`. We refer to user-defined metadata as tags.
 
 ## Indexing Scheme
 
 Let's consider a table representing the Content-Type metadata attribute. Each object is associated to a unique row 
-identifier (rowId). 
+identifier (rowId).
 
 | RowId | Content-Type | text/html | application/json | image/png | video/mp4 |
 |-------|--------------|-----------|------------------|-----------|-----------|
@@ -49,9 +48,9 @@ a bitmap. A bitmap represents a bit sequence. Each bit position corresponds to a
 then the corresponding object has the attribute value that the bitmap represents. There is a bitmap for each value of the 
 attribute.
 
-In the above example, there is a bitmap for each value of the ```Content-Type``` column. The column ```text/html``` contains 
-the bitmap ```100010```, indicating that the objects corresponding to the bit positions 0, 4 have the value ```text/html``` 
-as their ```Content-Type```.
+In the above example, there is a bitmap for each value of the `Content-Type` column. The column `text/html` contains 
+the bitmap `100010`, indicating that the objects corresponding to the bit positions 0, 4 have the value `text/html` 
+as their `Content-Type`.
 
 In that way we can respord to exact match queries on any data type simply by finding the bit positions that are set in the 
 corresponding bitmap. The described encoding is refered to as equality encoding
@@ -76,7 +75,7 @@ unique value.
 Although binning may reduce storage costs, it may increase the costs of queries that do not fall on the exact bin boundaries, 
 as it may require partial search of the stored data. This encoding is optimized for two-sided range queries.
 
-* In **range encoding** each bitmap represents a range of values ```[0, v]```. 
+* In **range encoding** each bitmap represents a range of values `[0, v]`. 
 
 | RowId | Content-Length | [0:1024] | [0:2048] | [0:3072] | [0:4096] | [0:5120] |
 |-------|----------------|----------|----------|----------|----------|----------|
@@ -91,8 +90,8 @@ This encoding is optimized for one-sided range queries. A two-sided query for th
 is processed using the XOR operator between the bitmaps for the ranges [0, v<sub>1</sub>] and [0, v<sub>2</sub>].
 
 * The **interval encoding** scheme, which is optimised both for one-sided and two-sided range queries consists of overlapping
-ranges. In the above example the range could be In the above example, the ranges could be ```[0:2048], [1024:3072], 
-[2048:4096], [3072:5120]```.
+ranges. In the above example the range could be In the above example, the ranges could be `[0:2048], [1024:3072], 
+[2048:4096], [3072:5120]`.
 
 Moreover, dynamic programming can be used to determine the optimal partition of attribute values into ranges, based on query 
 access patterns.
