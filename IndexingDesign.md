@@ -148,15 +148,22 @@ The supported attributes are:
   * `x-amz-meta-key--integer/value` where `key`, `value` are specific user-defined integer attributes.
   For example we can search for objects where `Content-Length > 1024` using the header `query:contentlength/>/1024`.
   
-### Partitioning 
+### System architecture
 
-The described design refers to a single indexing node. We will now expand by designing a partition scheme that enables the 
-indexing service to scale more efficiently by performing load balancing.
+The described design refers to a single indexing node. We will now expand by designing a replication and partitioning scheme 
+that enables the indexing service to scale more efficiently.
 
 The building block of the system is a bitmap daemon referred to as `bitmapd`, that is responsible for receiving updates, 
 maintaining indexed data and responding to queries. The namespace is partitioned among multiple `bitmapd`s. Each one 
 is assigned a set of buckets to index and respond to queries about. 
 
+Additionally, multiple `bitmapd`s form a replication group. They replicate the index structure in order to provide 
+availability and tolerate failure of a minority.
+
 The system also contains an API daemon named `indexerd`, which receives data updates and queries from the storage system 
-and dispatches them to the correspond `bitmapd`s according to a mapping. Its aim is to make the partitioning mechanism 
-transparent to the storage system and the end users.
+and dispatches them to the correspond `bitmapd`s according to a mapping. Its aim is to make the replication and partitioning 
+mechanism transparent to the storage system and the end users.
+
+The following diagram depicts the indexing system architecture:
+
+![](res/Indexing-Architecture.png)
