@@ -21,6 +21,61 @@ const objectName = 'objectName';
 const postBody = Buffer.from('I am a body', 'utf8');
 const locationConstraint = 'us-west-1';
 
+describe.only('Try', () => {
+    let testPutObjectRequest;
+
+    beforeEach(() => {
+        cleanup();
+        testPutObjectRequest = new DummyRequest({
+            bucketName,
+            namespace,
+            objectKey: objectName,
+            headers: {
+                'x-amz-meta-test': '\x04m',
+                'content-length': '12',
+            },
+            parsedContentLength: 12,
+            url: `/${bucketName}/${objectName}`,
+        }, postBody);
+    });
+
+    const testPutBucketRequest = {
+        bucketName,
+        namespace,
+        headers: {},
+        url: `/${bucketName}`,
+    };
+    const userMetadataKey = 'x-amz-meta-test';
+    const userMetadataValue = '\x04m';
+    const testGetRequest = {
+        bucketName,
+        namespace,
+        objectKey: objectName,
+        headers: {},
+        url: `/${bucketName}/${objectName}`,
+    };
+
+    it('GO', done => {
+        bucketPut(authInfo, testPutBucketRequest, locationConstraint,
+            log, () => {
+                objectPut(authInfo, testPutObjectRequest, undefined,
+                    log, err => {
+                        if (err) {
+                            done(err);
+                        }
+                        objectGet(authInfo, testGetRequest,
+                            log, (err, result, responseMetaHeaders) => {
+                                console.log('responseMetaHeaders', responseMetaHeaders);
+                                assert.strictEqual(responseMetaHeaders
+                                    [userMetadataKey],
+                                    userMetadataValue);
+                                done();
+                            });
+                    });
+            });
+    });
+});
+
 describe('objectGet API', () => {
     let testPutObjectRequest;
 
