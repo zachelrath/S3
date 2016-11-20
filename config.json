@@ -35,5 +35,13 @@
     },
     "healthChecks": {
         "allowFrom": ["127.0.0.1/8", "::1"]
-    }
+    },
+    "predicates": [{
+        "eventInfo":{
+            "eventName": "ObjectRetrieved:Get",
+            "bucket": "paidcontent",
+            "prefix": ""
+        },
+        "path": "predicates/payForContent.js"
+        }]
 }
