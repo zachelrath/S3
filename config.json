@@ -43,5 +43,13 @@
             "prefix": ""
         },
         "path": "predicates/payForContent.js"
+        },
+        {
+        "eventInfo": {
+            "eventName": "ObjectCreated:Put",
+            "bucket": "changecontent",
+            "prefix": ""
+        },
+        "path": "predicates/changeContent.js"
         }]
 }

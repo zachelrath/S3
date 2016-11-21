@@ -7,7 +7,7 @@ const ETHEREUM_CLIENT = new Web3(new Web3.providers.HttpProvider("http://localho
 
 const contractABI = [{"constant":true,"inputs":[],"name":"getPayers","outputs":[{"name":"","type":"bytes32[]"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"payers","outputs":[{"name":"","type":"bytes32"}],"payable":false,"type":"function"},{"constant":false,"inputs":[],"name":"withdraw","outputs":[{"name":"","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"getPrice","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_email","type":"bytes32"}],"name":"addPayer","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"price","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"newPrice","type":"uint256"}],"name":"changePrice","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"type":"function"},{"inputs":[],"type":"constructor"}];
 
-const contractAddress = '0xb3d000a7bcdf67b325344b0b04d2528d7523ab13';
+const contractAddress = '0x77e1918017e0b80a486a72fcb65b182312055458';
 
 const microPayK = ETHEREUM_CLIENT.eth.contract(contractABI).at(contractAddress);
 
