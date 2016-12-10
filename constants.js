@@ -66,4 +66,13 @@ export default {
     // hex digest of sha256 hash of empty string:
     emptyStringHash: crypto.createHash('sha256')
         .update('', 'binary').digest('hex'),
+
+    // We pad the partNumbers so the parts will be sorted in numerical order.
+    paddedPartNumber: number => `000000${number}`.substr(-5),
+
+    overviewKey: (splitter, objectKey, uploadId) =>
+        `overview${splitter}${objectKey}${splitter}${uploadId}`,
+
+    partKey: (uploadId, splitter, paddedPartNumber) =>
+        `${uploadId}${splitter}${paddedPartNumber}`,
 };
