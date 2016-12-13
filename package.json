@@ -34,7 +34,7 @@
     "node-uuid": "^1.4.3",
     "ready-set-stream": "1.0.7",
     "sproxydclient": "scality/sproxydclient",
-    "utapi": "scality/utapi#refactor/update_ft_tests",
+    "utapi": "scality/utapi#ft/add_account_level_metrics",
     "utf8": "~2.1.1",
     "vaultclient": "scality/vaultclient",
     "werelogs": "scality/werelogs",
