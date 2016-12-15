@@ -167,3 +167,15 @@ mechanism transparent to the storage system and the end users.
 The following diagram depicts the indexing system architecture:
 
 ![](res/Indexing-Architecture.png)
+
+### Distributed Architecture (Antidote backend)
+
+![](res/Antidote_backend.png)
+
+The above diagram depicts the architecture of a geo-distributed storage and indexing system implemented using the S3 Server and AntidoteDB (http://syncfree.github.io/antidote/).
+
+- Three S3 Server instances run on three DCs in different geographic locations. 
+- Each S3 Server instance uses an Antidote instance as a backend to store metadata.
+- Antidote instances perform interDC replication, propagating updates executed on one data center, to the others. As a result, S3 metadata are replicated across data centers.
+- When an update is executed on a data center, metadata attributes are propagated to an indexing service through a filter function F.
+- The indexing service also uses Antidote as a backend, and thus index updates are propagated through Antidote's interDC replication.
