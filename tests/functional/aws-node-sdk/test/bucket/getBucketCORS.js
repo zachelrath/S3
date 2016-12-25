@@ -47,7 +47,7 @@ function deleteBucketCorsObject(done) {
     });
 }
 
-function optionRequest(headers, statusCode, HTMLHead, headersResponse, done) {
+function optionRequest(headers, statusCode, headersResponse, done) {
     const options = {
         hostname,
         port,
@@ -65,12 +65,13 @@ function optionRequest(headers, statusCode, HTMLHead, headersResponse, done) {
         });
         res.on('end', () => {
             const total = body.join('');
-            if (HTMLHead) {
-                assert(total.indexOf(HTMLHead) > -1);
-            }
             if (statusCode) {
                 assert.deepEqual(res.statusCode, statusCode,
                 `status code expected: ${statusCode}`);
+                if (statusCode === 403) {
+                    assert(total.indexOf(
+                      '<head><title>403 Forbidden</title></head>') > -1);
+                }
             }
             if (headersResponse) {
                 Object.keys(headersResponse).forEach(key => {
@@ -118,7 +119,7 @@ describe('getBucketCors', () => {
             putBucketWebsiteObjectCors(corsParams, done);
         });
 
-        after(done => {
+        afterEach(done => {
             deleteBucketCorsObject(done);
         });
 
@@ -131,7 +132,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with not allowed request headers', done => {
             const headers = {
@@ -140,16 +141,14 @@ describe('getBucketCors', () => {
                 'Access-Control-Request-Headers': 'Origin, Accept, ' +
                 'Content-Type',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with not allowed origin', done => {
             const headers = {
                 'Origin': 'http://www.forbiddenwebsite.com',
                 'Access-Control-Request-Method': 'GET',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with listed method "POST"', done => {
             const headers = {
@@ -160,7 +159,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with listed method "PUT"', done => {
             const headers = {
@@ -171,7 +170,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with listed method "DELETE"', done => {
             const headers = {
@@ -182,7 +181,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
     });
 
@@ -219,7 +218,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with non-listed request headers', done => {
             const headers = {
@@ -228,40 +227,35 @@ describe('getBucketCors', () => {
                 'Access-Control-Request-Headers': 'Origin, Accept, ' +
                 'Content-Type',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with non-listed origin', done => {
             const headers = {
                 'Origin': 'http://www.forbiddenwebsite.com',
                 'Access-Control-Request-Method': 'GET',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with non-listed method: "POST"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'POST',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with non-listed method: "PUT"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'PUT',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with non-listed method "DELETE"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'DELETE',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
     });
 
@@ -289,7 +283,6 @@ describe('getBucketCors', () => {
             deleteBucketCorsObject(done);
         });
 
-        // Have not manage to reproduce agains AWS
         it('send OPTIONS request with origin', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
@@ -299,7 +292,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with non-listed request headers', done => {
             const headers = {
@@ -308,8 +301,7 @@ describe('getBucketCors', () => {
                 'Access-Control-Request-Headers': 'Origin, Accept, ' +
                 'Content-Type',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with a different origin', done => {
             const headers = {
@@ -320,33 +312,204 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with non-listed method: "POST"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'POST',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with non-listed method: "PUT"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'PUT',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
         it('send OPTIONS request with non-listed method "DELETE"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'DELETE',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
     });
+    describe('CORS allows method POST and allows all origins', () => {
+        const corsParams = {
+            Bucket: bucket,
+            CORSConfiguration: {
+                CORSRules: [
+                    {
+                        AllowedMethods: [
+                            'POST',
+                        ],
+                        AllowedOrigins: [
+                            '*',
+                        ],
+                    },
+                ],
+            },
+        };
+        beforeEach(done => {
+            putBucketWebsiteObjectCors(corsParams, done);
+        });
+
+        afterEach(done => {
+            deleteBucketCorsObject(done);
+        });
+
+        it('send OPTIONS request with origin', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'POST',
+            };
+            const headersResponse = {
+                'access-control-allow-origin': '*',
+                'access-control-allow-methods': 'POST',
+            };
+            optionRequest(headers, 204, headersResponse, done);
+        });
+        it('send OPTIONS request with non-listed method: "PUT"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'PUT',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+        it('send OPTIONS request with non-listed method: "DELETE"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'DELETE',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+        it('send OPTIONS request with non-listed method "GET"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'GET',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+    });
+
+    describe('CORS allows method PUT and allows all origins', () => {
+        const corsParams = {
+            Bucket: bucket,
+            CORSConfiguration: {
+                CORSRules: [
+                    {
+                        AllowedMethods: [
+                            'PUT',
+                        ],
+                        AllowedOrigins: [
+                            '*',
+                        ],
+                    },
+                ],
+            },
+        };
+        beforeEach(done => {
+            putBucketWebsiteObjectCors(corsParams, done);
+        });
+
+        afterEach(done => {
+            deleteBucketCorsObject(done);
+        });
+
+        it('send OPTIONS request with origin', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'PUT',
+            };
+            const headersResponse = {
+                'access-control-allow-origin': '*',
+                'access-control-allow-methods': 'PUT',
+            };
+            optionRequest(headers, 204, headersResponse, done);
+        });
+        it('send OPTIONS request with non-listed method: "DELETE"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'DELETE',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+        it('send OPTIONS request with non-listed method: "POST"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'POST',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+        it('send OPTIONS request with non-listed method "GET"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'GET',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+    });
+
+    describe('CORS allows method DELETE and allows all origins', () => {
+        const corsParams = {
+            Bucket: bucket,
+            CORSConfiguration: {
+                CORSRules: [
+                    {
+                        AllowedMethods: [
+                            'DELETE',
+                        ],
+                        AllowedOrigins: [
+                            '*',
+                        ],
+                    },
+                ],
+            },
+        };
+        beforeEach(done => {
+            putBucketWebsiteObjectCors(corsParams, done);
+        });
+
+        afterEach(done => {
+            deleteBucketCorsObject(done);
+        });
+
+        it('send OPTIONS request with origin', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'DELETE',
+            };
+            const headersResponse = {
+                'access-control-allow-origin': '*',
+                'access-control-allow-methods': 'DELETE',
+            };
+            optionRequest(headers, 204, headersResponse, done);
+        });
+        it('send OPTIONS request with non-listed method: "PUT"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'PUT',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+        it('send OPTIONS request with non-listed method: "POST"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'POST',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+        it('send OPTIONS request with non-listed method "GET"', done => {
+            const headers = {
+                'Origin': 'http://www.allowedwebsite.com',
+                'Access-Control-Request-Method': 'GET',
+            };
+            optionRequest(headers, 403, null, done);
+        });
+    });
+
     describe('CORS allows method GET, allows all origins and allows ' +
     'header content-type', () => {
         const corsParams = {
@@ -384,7 +547,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with listed request header "Content-Type"',
         done => {
@@ -398,7 +561,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-methods': 'GET',
                 'access-control-allow-headers': 'content-type',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
         it('send OPTIONS request with non-listed request headers',
         done => {
@@ -408,8 +571,7 @@ describe('getBucketCors', () => {
                 'Access-Control-Request-Headers': 'Origin, Accept, ' +
                 'Content-Type',
             };
-            const HTMLHead = '<head><title>403 Forbidden</title></head>';
-            optionRequest(headers, 403, HTMLHead, null, done);
+            optionRequest(headers, 403, null, done);
         });
     });
 
@@ -456,7 +618,7 @@ describe('getBucketCors', () => {
                 'access-control-expose-headers':
                 'x-amz-server-side-encryption, x-amz-request-id, x-amz-id-2',
             };
-            optionRequest(headers, 204, null, headersResponse, done);
+            optionRequest(headers, 204, headersResponse, done);
         });
     });
 });
