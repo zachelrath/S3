@@ -209,7 +209,8 @@ describe('getBucketCors', () => {
             deleteBucketCorsObject(done);
         });
 
-        it('send OPTIONS request with listed origin header', done => {
+        it('send OPTIONS request with listed origin and listed method "GET"',
+        done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'GET',
@@ -283,7 +284,7 @@ describe('getBucketCors', () => {
             deleteBucketCorsObject(done);
         });
 
-        it('send OPTIONS request with origin', done => {
+        it('send OPTIONS request with listed method "GET"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'GET',
@@ -360,7 +361,7 @@ describe('getBucketCors', () => {
             deleteBucketCorsObject(done);
         });
 
-        it('send OPTIONS request with origin', done => {
+        it('send OPTIONS request with listed method "POST"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'POST',
@@ -418,7 +419,7 @@ describe('getBucketCors', () => {
             deleteBucketCorsObject(done);
         });
 
-        it('send OPTIONS request with origin', done => {
+        it('send OPTIONS request with listed method "PUT"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'PUT',
@@ -476,7 +477,7 @@ describe('getBucketCors', () => {
             deleteBucketCorsObject(done);
         });
 
-        it('send OPTIONS request with origin', done => {
+        it('send OPTIONS request with listed method "DELETE"', done => {
             const headers = {
                 'Origin': 'http://www.allowedwebsite.com',
                 'Access-Control-Request-Method': 'DELETE',
