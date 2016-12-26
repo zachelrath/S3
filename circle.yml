@@ -18,6 +18,7 @@ machine:
     ENABLE_LOCAL_CACHE: true
   hosts:
     bucketwebsitetester.s3-website-us-east-1.amazonaws.com: 127.0.0.1
+    awsbucketcorstester.s3.amazonaws.com: 127.0.0.1
 
 dependencies:
   post:

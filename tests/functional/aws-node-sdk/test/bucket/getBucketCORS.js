@@ -1,51 +1,21 @@
 import assert from 'assert';
-import fs from 'fs';
 import http from 'http';
 import https from 'https';
-import path from 'path';
-import async from 'async';
 
 import { S3 } from 'aws-sdk';
 
 import conf from '../../../../../lib/Config';
 import getConfig from '../support/config';
-import { WebsiteConfigTester } from '../../lib/utility/website-util';
 
 const config = getConfig('default', { signatureVersion: 'v4' });
 const s3 = new S3(config);
 
 const transport = conf.https ? https : http;
-const bucket = process.env.AWS_ON_AIR ? 'awsbucketwebsitetester' :
-    'bucketwebsitetester';
-const hostname = `${bucket}.s3-website-us-east-1.amazonaws.com`;
+const bucket = process.env.AWS_ON_AIR ? 'awsbucketcorstester' :
+    'bucketcorstester';
+const hostname = `${bucket}.s3.amazonaws.com`;
 
 const port = process.env.AWS_ON_AIR ? 80 : 8000;
-
-
-function putBucketWebsiteObjectCors(corsParams, done) {
-    const webConfig = new WebsiteConfigTester('index.html');
-    async.waterfall([
-        next => s3.putBucketWebsite({ Bucket: bucket,
-            WebsiteConfiguration: webConfig }, next),
-        (err, next) => s3.putObject({ Bucket: bucket,
-            Key: 'index.html',
-            ACL: 'public-read',
-            Body: fs.readFileSync(path.join(__dirname,
-                '/websiteFiles/index.html')),
-            ContentType: 'text/html' }, next),
-        (err, next) => s3.putBucketCors(corsParams, next),
-    ], done);
-}
-
-function deleteBucketCorsObject(done) {
-    s3.deleteBucketCors({ Bucket: bucket }, err => {
-        if (err) {
-            return done(err);
-        }
-        return s3.deleteObject({ Bucket: bucket,
-        Key: 'index.html' }, done);
-    });
-}
 
 function optionRequest(headers, statusCode, headersResponse, done) {
     const options = {
@@ -116,11 +86,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with allowed origin', done => {
@@ -132,7 +102,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with not allowed request headers', done => {
             const headers = {
@@ -159,7 +129,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with listed method "PUT"', done => {
             const headers = {
@@ -170,7 +140,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with listed method "DELETE"', done => {
             const headers = {
@@ -181,7 +151,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'PUT, POST, DELETE, GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
     });
 
@@ -202,11 +172,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with listed origin and listed method "GET"',
@@ -219,7 +189,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': 'http://www.allowedwebsite.com',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed request headers', done => {
             const headers = {
@@ -277,11 +247,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with listed method "GET"', done => {
@@ -293,7 +263,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed request headers', done => {
             const headers = {
@@ -313,7 +283,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed method: "POST"', done => {
             const headers = {
@@ -354,11 +324,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with listed method "POST"', done => {
@@ -370,7 +340,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'POST',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed method: "PUT"', done => {
             const headers = {
@@ -412,11 +382,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with listed method "PUT"', done => {
@@ -428,7 +398,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'PUT',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed method: "DELETE"', done => {
             const headers = {
@@ -470,11 +440,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with listed method "DELETE"', done => {
@@ -486,7 +456,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'DELETE',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed method: "PUT"', done => {
             const headers = {
@@ -532,11 +502,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('send OPTIONS request with lised origin', done => {
@@ -548,7 +518,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-origin': '*',
                 'access-control-allow-methods': 'GET',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with listed request header "Content-Type"',
         done => {
@@ -562,7 +532,7 @@ describe('getBucketCors', () => {
                 'access-control-allow-methods': 'GET',
                 'access-control-allow-headers': 'content-type',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
         it('send OPTIONS request with non-listed request headers',
         done => {
@@ -601,11 +571,11 @@ describe('getBucketCors', () => {
             },
         };
         beforeEach(done => {
-            putBucketWebsiteObjectCors(corsParams, done);
+            s3.putBucketCors(corsParams, done);
         });
 
         afterEach(done => {
-            deleteBucketCorsObject(done);
+            s3.deleteBucketCors({ Bucket: bucket }, done);
         });
 
         it('should return response with expose headers header', done => {
@@ -619,7 +589,7 @@ describe('getBucketCors', () => {
                 'access-control-expose-headers':
                 'x-amz-server-side-encryption, x-amz-request-id, x-amz-id-2',
             };
-            optionRequest(headers, 204, headersResponse, done);
+            optionRequest(headers, 200, headersResponse, done);
         });
     });
 });
