@@ -36,11 +36,11 @@ describe Fog do
     downloadFile = "downloadedfile.txt"
     smallFile = "smallFile.txt"
     before(:all) do
-        File.open(fileToStream, "wb") do |f|
-          SIZE.to_i.times { f.write(
-              SecureRandom.random_bytes( ONEMEGABYTE )
-              ) }
-        end
+        # File.open(fileToStream, "wb") do |f|
+        #   SIZE.to_i.times { f.write(
+        #       SecureRandom.random_bytes( ONEMEGABYTE )
+        #       ) }
+        # end
         $fileToStreamMd5 = Digest::MD5.file(fileToStream).hexdigest
 
         File.open(smallFile, "wb") do |f|
@@ -51,12 +51,12 @@ describe Fog do
     end
 
     after(:all) do
-        File.unlink(fileToStream)
+        # File.unlink(fileToStream)
         File.unlink(smallFile)
         File.unlink(downloadFile)
     end
 
-    $bucketName = "myrubybucket"
+    $bucketName = "myrubybucket222222222"
 
     it "should create a bucket" do
         $bucket = connection.directories.create(
@@ -64,24 +64,24 @@ describe Fog do
         )
     end
 
-    it "should put a non-streaming object (regular v4 auth)" do
-        helloBody = "Hello Fog!"
-        non_streamFile = $bucket.files.create(
-            :body => helloBody,
-            :key  => "helloFog"
-        )
-        bodyHash = Digest::MD5.hexdigest(helloBody)
-        expect(non_streamFile.etag).to eq(bodyHash)
-    end
-
-    it "should get a non-streaming object (regular v4 auth)" do
-        received = connection.get_object($bucketName, "helloFog")
-        expect(received.body).to eq("Hello Fog!")
-    end
-
-    it "should delete a non-streaming object (regular v4 auth)" do
-        connection.delete_object($bucketName, "helloFog")
-    end
+    # it "should put a non-streaming object (regular v4 auth)" do
+    #     helloBody = "Hello Fog!"
+    #     non_streamFile = $bucket.files.create(
+    #         :body => helloBody,
+    #         :key  => "helloFog"
+    #     )
+    #     bodyHash = Digest::MD5.hexdigest(helloBody)
+    #     expect(non_streamFile.etag).to eq(bodyHash)
+    # end
+    #
+    # it "should get a non-streaming object (regular v4 auth)" do
+    #     received = connection.get_object($bucketName, "helloFog")
+    #     expect(received.body).to eq("Hello Fog!")
+    # end
+    #
+    # it "should delete a non-streaming object (regular v4 auth)" do
+    #     connection.delete_object($bucketName, "helloFog")
+    # end
 
     it "should put a streaming object (streaming v4 auth)" do
         streamObject = $bucket.files.create(
