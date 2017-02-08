@@ -90,27 +90,37 @@ function exec(args, done, exitCode) {
     });
 }
 
-// Test stdout against expected output
-function checkRawOutput(args, lineFinder, testString, cb) {
+// Test stdout or stderr against expected output
+function checkRawOutput(args, lineFinder, testString, stream, cb) {
     let av = ['-c', configCfg].concat(args);
     if (isScality) {
         av = av.concat(isScality);
     }
     process.stdout.write(`${program} ${av}\n`);
     const allData = [];
+    const allErrData = [];
     const child = proc.spawn(program, av);
     child.stdout.on('data', data => {
         allData.push(data.toString());
         process.stdout.write(data.toString());
     });
+    child.stderr.on('data', data => {
+        allErrData.push(data.toString());
+        process.stdout.write(data.toString());
+    });
     child.on('close', () => {
+        if (stream === 'stderr') {
+            const foundIt = allErrData.join('').split('\n')
+                .filter(item => item.indexOf(lineFinder) > -1)
+                .some(item => item.indexOf(testString) > -1);
+            return cb(foundIt);
+        }
         const foundIt = allData.join('').split('\n')
             .filter(item => item.indexOf(lineFinder) > -1)
             .some(item => item.indexOf(testString) > -1);
         return cb(foundIt);
     });
 }
-
 
 function findEndString(data, start) {
     const delimiter = data[start];
@@ -283,7 +293,11 @@ describe('s3cmd put and get bucket ACLs', function aclBuck() {
         exec(['setacl', `s3://${bucket}`, '--acl-public'], done);
     });
 
-    it('should get canned ACL that was set', done => {
+    // TODO: Unskip when getBucketLocation has been implemented
+    // We currently return NotImplemented to ?location queries, so `s3cmd info`
+    // will not print info for canned ACL (but once we support those queries,
+    // this test should work again)
+    it.skip('should get canned ACL that was set', done => {
         checkRawOutput(['info', `s3://${bucket}`], 'ACL', '*anon*: READ',
         foundIt => {
             assert(foundIt);
@@ -296,9 +310,13 @@ describe('s3cmd put and get bucket ACLs', function aclBuck() {
         `--acl-grant=write:${emailAccount}`], done);
     });
 
-    it('should get specific ACL that was set', done => {
+    // TODO: Unskip when getBucketLocation has been implemented
+    // We currently return NotImplemented to ?location queries, so `s3cmd info`
+    // will not print info for specific ACL (but once we support those queries,
+    // this test should work again)
+    it.skip('should get specific ACL that was set', done => {
         checkRawOutput(['info', `s3://${bucket}`], 'ACL',
-        `${lowerCaseEmail}: WRITE`, foundIt => {
+        `${lowerCaseEmail}: WRITE`, 'stdout', foundIt => {
             assert(foundIt);
             done();
         });
@@ -317,7 +335,7 @@ describe('s3cmd getBucket', () => {
 
 describe('s3cmd getService', () => {
     it("should get a list of a user's buckets", done => {
-        checkRawOutput(['ls'], 's3://', `${bucket}`, foundIt => {
+        checkRawOutput(['ls'], 's3://', `${bucket}`, 'stdout', foundIt => {
             assert(foundIt);
             done();
         });
@@ -455,7 +473,7 @@ describe('s3cmd put and get object ACLs', function aclObj() {
 
     it('should get canned ACL that was set', done => {
         checkRawOutput(['info', `s3://${bucket}/${upload}`], 'ACL',
-        '*anon*: READ', foundIt => {
+        '*anon*: READ', 'stdout', foundIt => {
             assert(foundIt);
             done();
         });
@@ -468,7 +486,7 @@ describe('s3cmd put and get object ACLs', function aclObj() {
 
     it('should get specific ACL that was set', done => {
         checkRawOutput(['info', `s3://${bucket}/${upload}`], 'ACL',
-        `${lowerCaseEmail}: READ`, foundIt => {
+        `${lowerCaseEmail}: READ`, 'stdout', foundIt => {
             assert(foundIt);
             done();
         });
@@ -671,7 +689,7 @@ describe('s3cmd put, get and delete object with spaces ' +
 
     it('should list bucket showing file with spaces', done => {
         checkRawOutput(['ls', `s3://${bucket}`], `s3://${bucket}`,
-        keyWithSpacesAndPluses, foundIt => {
+        keyWithSpacesAndPluses, 'stdout', foundIt => {
             assert(foundIt);
             done();
         });
@@ -690,18 +708,55 @@ describe('s3cmd put, get and delete object with spaces ' +
     });
 });
 
+// TODO: Remove this test when getBucketLocation is implemented
 describe('s3cmd info', () => {
+    const bucket = 's3cmdinfobucket';
+
+    beforeEach(done => {
+        exec(['mb', `s3://${bucket}`], done);
+    });
+
+    afterEach(done => {
+        exec(['rb', `s3://${bucket}`], done);
+    });
+
+    it('should find s3cmd info returns NotImplemented error because ' +
+    '?location queries are not supported', done => {
+        checkRawOutput(['info', `s3://${bucket}`], 'ERROR',
+        '501 (NotImplemented)', 'stderr', foundIt => {
+            assert(foundIt);
+            done();
+        });
+    });
+});
+
+// TODO: Unskip when getBucketLocation has been implemented
+// We currently return NotImplemented to ?location queries, so `s3cmd info`
+// will not print values for queries we do support (but once we support
+// ?location, these tests should work again)
+describe.skip('s3cmd info', () => {
+    const bucket = 's3cmdinfobucket';
+
+    beforeEach(done => {
+        exec(['mb', `s3://${bucket}`], done);
+    });
+
+    afterEach(done => {
+        exec(['rb', `s3://${bucket}`], done);
+    });
+
     // test that POLICY and CORS are returned as 'none'
     it('should find that policy has a value of none', done => {
         checkRawOutput(['info', `s3://${bucket}`], 'policy', 'none',
-        foundIt => {
+        'stdout', foundIt => {
             assert(foundIt);
             done();
         });
     });
 
     it('should find that cors has a value of none', done => {
-        checkRawOutput(['info', `s3://${bucket}`], 'cors', 'none', foundIt => {
+        checkRawOutput(['info', `s3://${bucket}`], 'cors', 'none',
+        'stdout', foundIt => {
             assert(foundIt);
             done();
         });
@@ -727,7 +782,7 @@ describe('s3cmd info', () => {
 
         it('should find that cors has a value', done => {
             checkRawOutput(['info', `s3://${bucket}`], 'cors', corsConfig,
-            foundIt => {
+            'stdout', foundIt => {
                 assert(foundIt, 'Did not find value for cors');
                 done();
             });
