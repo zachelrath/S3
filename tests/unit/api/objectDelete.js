@@ -17,7 +17,7 @@ const namespace = 'default';
 const bucketName = 'bucketname';
 const postBody = Buffer.from('I am a body', 'utf8');
 const objectKey = 'objectName';
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 
 function testAuth(bucketOwner, authUser, bucketPutReq, objPutReq, objDelReq,
     log, cb) {

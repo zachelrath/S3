@@ -18,7 +18,7 @@ const postBody = Buffer.from('I am a body', 'utf8');
 const contentLength = 2 * postBody.length;
 const objectKey1 = 'objectName1';
 const objectKey2 = 'objectName2';
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 const testBucketPutRequest = new DummyRequest({
     bucketName,
     namespace,
@@ -85,7 +85,7 @@ describe('getObjMetadataAndDelete function for multiObjectDelete', () => {
                     // eslint-disable-next-line
                     assert.deepStrictEqual(ds, [ , , ]);
                     done();
-                }, 20);
+                }, 500);
             });
     });
 

@@ -27,7 +27,7 @@ const testPutBucketRequest = {
 };
 const userMetadataKey = 'x-amz-meta-test';
 const userMetadataValue = 'some metadata';
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 
 let testPutObjectRequest;
 

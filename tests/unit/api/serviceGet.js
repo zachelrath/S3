@@ -14,7 +14,7 @@ const namespace = 'default';
 const bucketName1 = 'bucketname1';
 const bucketName2 = 'bucketname2';
 const bucketName3 = 'bucketname3';
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 
 
 describe('serviceGet API', () => {

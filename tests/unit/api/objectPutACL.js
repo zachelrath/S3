@@ -34,7 +34,7 @@ const testPutBucketRequest = new DummyRequest({
     headers: { host: `${bucketName}.s3.amazonaws.com` },
     url: '/',
 });
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 let testPutObjectRequest;
 
 describe('putObjectACL API', () => {

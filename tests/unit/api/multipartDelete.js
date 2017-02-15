@@ -105,7 +105,7 @@ describe('Multipart Delete API', () => {
 
     it('should still not return error if uploadId does not exist on ' +
     'multipart abort call, in region other than us-east-1', done => {
-        _createAndAbortMpu(true, true, 'us-west-1', err => {
+        _createAndAbortMpu(true, true, 'test-region', err => {
             assert.strictEqual(err, null, `Expected no error, got ${err}`);
             done(err);
         });

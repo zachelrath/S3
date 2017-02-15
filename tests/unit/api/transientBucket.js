@@ -63,7 +63,7 @@ const userBucketOwner = 'admin';
 const creationDate = new Date().toJSON();
 const usersBucket = new BucketInfo(usersBucketName,
     userBucketOwner, userBucketOwner, creationDate);
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 
 
 describe('transient bucket handling', () => {

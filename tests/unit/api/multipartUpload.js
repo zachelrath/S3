@@ -32,7 +32,7 @@ const bucketPutRequest = {
     url: '/',
     post: '',
 };
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 const objectKey = 'testObject';
 const initiateRequest = {
     bucketName,

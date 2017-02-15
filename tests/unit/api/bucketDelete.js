@@ -16,7 +16,7 @@ const namespace = 'default';
 const bucketName = 'bucketname';
 const postBody = Buffer.from('I am a body', 'utf8');
 const usersBucket = constants.usersBucket;
-const locationConstraint = 'us-west-1';
+const locationConstraint = 'us-east-1';
 
 describe('bucketDelete API', () => {
     beforeEach(() => {
