@@ -27,7 +27,7 @@ if [[ "$SSL" == "true" ]]; then
 
     echo "In your /etc/hosts file on Linux, OS X, or Unix (with root permissions), \n edit the line of localhost so it looks like this: \n 127.0.0.1      localhost s3.scality.test"
 
-    ## Generate SSL key and certificates ##
+    ## Generate SSL key and certificates
     # Generate a private key for your CSR
     openssl genrsa -out ca.key 2048
     # Generate a self signed certificate for your local Certificate Authority
@@ -39,8 +39,11 @@ if [[ "$SSL" == "true" ]]; then
     # Generate a local-CA-signed certificate for S3 Server
     openssl x509 -req -in test.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out test.crt -days 99999 -sha256
 
-    ## Update S3Server config.json ##
-    sed -i "0,/,/s//,\n    \"certFilePaths\": { \"key\": \".\/test.key\", \"cert\": \".\/test.crt\", \"ca\": \".\/ca.crt\" },/" ./config.json
+    ## Update S3Server config.json
+    # This condition makes sure that certFilePaths section is not added twice. (for docker restart)
+    if ! grep -q "certFilePaths" ./config.json; then
+        sed -i "0,/,/s//,\n    \"certFilePaths\": { \"key\": \".\/test.key\", \"cert\": \".\/test.crt\", \"ca\": \".\/ca.crt\" },/" ./config.json
+    fi
 fi
 
 exec "$@"

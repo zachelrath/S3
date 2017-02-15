@@ -55,7 +55,8 @@ docker run -d --name s3server -p 8000:8000 -e LOG_LEVEL=trace scality/s3server
 Set to true, this variable allows you to run S3 with SSL.
 
 ```shell
-docker run -d --name s3server -p 8000:8000 -e SSL=true -e HOST_NAME=s3.scality.test scality/s3server
+docker run -d --name s3server -p 8000:8000 -e SSL=true -e HOST_NAME=s3.scality.test
+scality/s3server
 ```
 
 More information about how to use S3 server with SSL : [Laure's blog post link]
