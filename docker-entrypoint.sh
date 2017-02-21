@@ -23,22 +23,24 @@ if [[ "$LOG_LEVEL" ]]; then
     fi
 fi
 
-if [[ "$SSL" == "true" ]]; then
+if [[ "$SSL" ]]; then
 
-    echo "In your /etc/hosts file on Linux, OS X, or Unix (with root permissions), \n edit the line of localhost so it looks like this: \n 127.0.0.1      localhost s3.scality.test"
+    echo "In your /etc/hosts file on Linux, OS X, or Unix (with root permissions), \n edit the line of localhost so it looks like this: \n 127.0.0.1      localhost <YOUR_SUBDOMAIN>.$SSL"
 
-    ## Generate SSL key and certificates
-    # Generate a private key for your CSR
-    openssl genrsa -out ca.key 2048
-    # Generate a self signed certificate for your local Certificate Authority
-    openssl req -new -x509 -extensions v3_ca -key ca.key -out ca.crt -days 99999  -subj "/C=US/ST=Country/L=City/O=Organization/CN=scality.test"
-    # Generate a key for S3 Server
-    openssl genrsa -out test.key 2048
-    # Generate a Certificate Signing Request for S3 Server
-    openssl req -new -key test.key -out test.csr -subj "/C=US/ST=Country/L=City/O=Organization/CN=*.scality.test"
-    # Generate a local-CA-signed certificate for S3 Server
-    openssl x509 -req -in test.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out test.crt -days 99999 -sha256
-
+    # This condition makes sure that the certificates are not generated twice. (for docker restart)
+    if [ ! -f ./ca.key ] || [ ! -f ./ca.crt ] || [ ! -f ./test.key ] || [ ! -f ./test.crt ] ; then
+        ## Generate SSL key and certificates
+        # Generate a private key for your CSR
+        openssl genrsa -out ca.key 2048
+        # Generate a self signed certificate for your local Certificate Authority
+        openssl req -new -x509 -extensions v3_ca -key ca.key -out ca.crt -days 99999  -subj "/C=US/ST=Country/L=City/O=Organization/CN=$SSL"
+        # Generate a key for S3 Server
+        openssl genrsa -out test.key 2048
+        # Generate a Certificate Signing Request for S3 Server
+        openssl req -new -key test.key -out test.csr -subj "/C=US/ST=Country/L=City/O=Organization/CN=*.$SSL"
+        # Generate a local-CA-signed certificate for S3 Server
+        openssl x509 -req -in test.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out test.crt -days 99999 -sha256
+    fi
     ## Update S3Server config.json
     # This condition makes sure that certFilePaths section is not added twice. (for docker restart)
     if ! grep -q "certFilePaths" ./config.json; then
