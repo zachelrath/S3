@@ -18,12 +18,15 @@ environment variables on the docker run command line.
 #### HOST_NAME
 
 This variable specifies a host name.
-If you have a domain such as example.com, by specifying that here,
-you and your users can direct s3 server requests to example.com.
+If you have a domain such as new.host.com, by specifying that here,
+you and your users can direct s3 server requests to new.host.com.
 
 ```shell
 docker run -d --name s3server -p 8000:8000 -e HOST_NAME=new.host.com scality/s3server
 ```
+
+Note: In your `/etc/hosts` file on Linux, OS X, or Unix with root permissions),
+make sure to associate 127.0.0.1 with `new.host.com`
 
 #### ACCESS_KEY and SECRET_KEY
 

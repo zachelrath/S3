@@ -12,6 +12,7 @@ fi
 if [[ "$HOST_NAME" ]]; then
     sed -i "s/s3.docker.test/$HOST_NAME/" ./config.json
     echo "Host name has been modified to $HOST_NAME"
+    echo "Note: In your `/etc/hosts` file on Linux, OS X, or Unix with root permissions), make sure to associate 127.0.0.1 with $HOST_NAME"
 fi
 
 if [[ "$LOG_LEVEL" ]]; then
@@ -24,9 +25,9 @@ if [[ "$LOG_LEVEL" ]]; then
 fi
 
 if [[ "$SSL" ]]; then
-
-    echo "In your /etc/hosts file on Linux, OS X, or Unix (with root permissions), \n edit the line of localhost so it looks like this: \n 127.0.0.1      localhost <YOUR_SUBDOMAIN>.$SSL"
-
+    if [[ -z "$HOST_NAME" ]]; then
+        echo "WARNING! No HOST_NAME has been provided"
+    fi
     # This condition makes sure that the certificates are not generated twice. (for docker restart)
     if [ ! -f ./ca.key ] || [ ! -f ./ca.crt ] || [ ! -f ./test.key ] || [ ! -f ./test.crt ] ; then
         ## Generate SSL key and certificates
