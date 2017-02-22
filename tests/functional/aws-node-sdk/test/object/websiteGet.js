@@ -12,6 +12,10 @@ import { WebsiteConfigTester } from '../../lib/utility/website-util';
 const config = getConfig('default', { signatureVersion: 'v4' });
 const s3 = new S3(config);
 
+// Note: To run these tests locally, you may need to edit the machine's
+// /etc/hosts file to include the following line:
+// `127.0.0.1 bucketwebsitetester.s3-website-us-east-1.amazonaws.com`
+
 const transport = conf.https ? 'https' : 'http';
 const bucket = process.env.AWS_ON_AIR ? 'awsbucketwebsitetester' :
     'bucketwebsitetester';
@@ -39,12 +43,10 @@ function putBucketWebsiteAndPutObjectRedirect(redirect, condition, key, done) {
     });
 }
 
-// Note: To run these tests locally, you may need to edit the /etc/hosts file
-// to include `127.0.0.1 bucketwebsitetester.s3-website-us-east-1.amazonaws.com`
 describe('User visits bucket website endpoint', () => {
     it('should return 404 when no such bucket', done => {
-        WebsiteConfigTester.checkHTML('GET', endpoint, '404-no-such-bucket',
-        null, bucket, done);
+        WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
+        '404-no-such-bucket', null, bucket, done);
     });
 
     describe('with existing bucket', () => {
@@ -53,7 +55,7 @@ describe('User visits bucket website endpoint', () => {
         afterEach(done => s3.deleteBucket({ Bucket: bucket }, done));
 
         it('should return 404 when no website configuration', done => {
-            WebsiteConfigTester.checkHTML('GET', endpoint,
+            WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
             '404-no-such-website-configuration', null, bucket, done);
         });
 
@@ -98,12 +100,12 @@ describe('User visits bucket website endpoint', () => {
             });
 
             it('should serve indexDocument if no key requested', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint, 'index-user',
-                null, null, done);
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
+                'index-user', null, null, done);
             });
             it('should serve indexDocument if key requested', done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/index.html`,
-                'index-user', null, null, done);
+                WebsiteConfigTester.checkHTML(null, 'GET',
+                `${endpoint}/index.html`, 'index-user', null, null, done);
             });
         });
         describe('with path in request with/without key', () => {
@@ -130,13 +132,13 @@ describe('User visits bucket website endpoint', () => {
 
             it('should serve indexDocument if path request without key',
             done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/pathprefix/`,
-                'index-user', null, null, done);
+                WebsiteConfigTester.checkHTML(null, 'GET',
+                `${endpoint}/pathprefix/`, 'index-user', null, null, done);
             });
 
             it('should serve indexDocument if path request with key',
             done => {
-                WebsiteConfigTester.checkHTML('GET',
+                WebsiteConfigTester.checkHTML(null, 'GET',
                 `${endpoint}/pathprefix/index.html`,
                 'index-user', null, null, done);
             });
@@ -163,7 +165,7 @@ describe('User visits bucket website endpoint', () => {
             });
 
             it('should return 403 if key is private', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint,
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
                 '403-access-denied', null, null, done);
             });
         });
@@ -176,7 +178,7 @@ describe('User visits bucket website endpoint', () => {
             });
 
             it('should return 403 if nonexisting index document key', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint,
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
                 '403-access-denied', null, null, done);
             });
         });
@@ -193,12 +195,12 @@ describe('User visits bucket website endpoint', () => {
             });
 
             it(`should redirect to ${redirectEndpoint}`, done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint, 'redirect',
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint, 'redirect',
                 `${redirectEndpoint}/`, null, done);
             });
 
             it(`should redirect to ${redirectEndpoint}/about`, done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about`,
                 'redirect', `${redirectEndpoint}/about`, null, done);
             });
         });
@@ -220,12 +222,12 @@ describe('User visits bucket website endpoint', () => {
             });
 
             it('should redirect to https://google.com/', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint, 'redirect',
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint, 'redirect',
                 'https://www.google.com/', null, done);
             });
 
             it('should redirect to https://google.com/about', done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about`,
                 'redirect', 'https://www.google.com/about', null, done);
             });
         });
@@ -253,8 +255,8 @@ describe('User visits bucket website endpoint', () => {
 
             it('should serve custom error document if an error occurred',
             done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint, 'error-user',
-                null, null, done);
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
+                'error-user', null, null, done);
             });
         });
 
@@ -268,7 +270,7 @@ describe('User visits bucket website endpoint', () => {
 
             it('should serve s3 error file if unfound custom error document ' +
             'and an error occurred', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint,
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
                 '403-retrieve-error-document', null, null, done);
             });
         });
@@ -289,7 +291,7 @@ describe('User visits bucket website endpoint', () => {
 
             it(`should redirect to ${redirectEndpoint} if error 403` +
             ' occured', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint,
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
                 'redirect', `${redirectEndpoint}/`, null, done);
             });
         });
@@ -310,7 +312,7 @@ describe('User visits bucket website endpoint', () => {
 
             it(`should redirect to ${redirectEndpoint}/about/ if ` +
             'key prefix is equal to "about"', done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about/`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about/`,
                 'redirect', `${redirectEndpoint}/about/`, null, done);
             });
         });
@@ -333,7 +335,7 @@ describe('User visits bucket website endpoint', () => {
 
             it(`should redirect to ${redirectEndpoint} if ` +
             'key prefix is equal to "about" AND error code 403', done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about/`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about/`,
                 'redirect', `${redirectEndpoint}/about/`, null, done);
             });
         });
@@ -357,7 +359,7 @@ describe('User visits bucket website endpoint', () => {
             });
 
             it('should redirect to the first one', done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about/`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about/`,
                 'redirect', `${redirectEndpoint}/about/`, null, done);
             });
         });
@@ -380,7 +382,7 @@ describe('User visits bucket website endpoint', () => {
 
             it('should redirect to https://www.google.com/about if ' +
             'https protocols', done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about/`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about/`,
                 'redirect', 'https://www.google.com/about/', null, done);
             });
         });
@@ -404,8 +406,8 @@ describe('User visits bucket website endpoint', () => {
 
             it('should serve redirect file if error 403 error occured',
             done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint, 'redirect-user',
-                `${endpoint}/redirect.html`, null, done);
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
+                'redirect-user', `${endpoint}/redirect.html`, null, done);
             });
         });
 
@@ -426,7 +428,7 @@ describe('User visits bucket website endpoint', () => {
 
             it(`should redirect to ${redirectEndpoint}/about/ if ` +
             'ReplaceKeyPrefixWith equals "about"', done => {
-                WebsiteConfigTester.checkHTML('GET', endpoint, 'redirect',
+                WebsiteConfigTester.checkHTML(null, 'GET', endpoint, 'redirect',
                 `${redirectEndpoint}/about/`, null, done);
             });
         });
@@ -451,7 +453,7 @@ describe('User visits bucket website endpoint', () => {
 
             it('should serve redirect file if key prefix is equal to "about"',
             done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about/`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about/`,
                 'redirect-user', `${endpoint}/redirect/`, null, done);
             });
         });
@@ -478,7 +480,7 @@ describe('User visits bucket website endpoint', () => {
             it('should serve redirect file if key prefix is equal to ' +
             '"about" and error 403',
             done => {
-                WebsiteConfigTester.checkHTML('GET', `${endpoint}/about/`,
+                WebsiteConfigTester.checkHTML(null, 'GET', `${endpoint}/about/`,
                 'redirect-user', `${endpoint}/redirect/`, null, done);
             });
         });

@@ -7,6 +7,10 @@ import { WebsiteConfigTester } from '../../lib/utility/website-util';
 const config = getConfig('default', { signatureVersion: 'v4' });
 const s3 = new S3(config);
 
+// Note: To run these tests locally, you may need to edit the machine's
+// /etc/hosts file to include the following line:
+// `127.0.0.1 bucketwebsitetester.s3-website-us-east-1.amazonaws.com`
+
 const transport = conf.https ? 'https' : 'http';
 const bucket = process.env.AWS_ON_AIR ? 'awsbucketwebsitetester' :
     'bucketwebsitetester';
@@ -125,12 +129,30 @@ describe('User visits bucket website endpoint with ACL', () => {
                 });
                 afterEach(done => {
                     WebsiteConfigTester.deleteObjectsThenBucket(s3, bucket,
-                      test.objects, done);
+                    test.objects, err => {
+                        if (process.env.AWS_ON_AIR) {
+                            // Give some time for AWS to finish deleting
+                            // object and buckets before starting next test
+                            setTimeout(() => done(err), 10000);
+                        } else {
+                            done(err);
+                        }
+                    });
                 });
 
                 it(`${test.it}`, done => {
-                    WebsiteConfigTester.checkHTML(endpoint, test.html,
-                    null, null, done);
+                    WebsiteConfigTester.checkHTML(null, 'GET', endpoint,
+                    test.html, null, null, done);
+                });
+
+                it(`${test.it} even with invalid auth credentials`, done => {
+                    WebsiteConfigTester.checkHTML('invalidAuth', 'GET',
+                    endpoint, test.html, null, null, done);
+                });
+
+                it(`${test.it} even with valid auth credentials`, done => {
+                    WebsiteConfigTester.checkHTML('validAuth', 'GET',
+                    endpoint, test.html, null, null, done);
                 });
             });
         });

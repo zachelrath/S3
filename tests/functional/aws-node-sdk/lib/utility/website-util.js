@@ -6,9 +6,62 @@ import url from 'url';
 
 import makeRequest from '../../../raw-node/utils/makeRequest';
 
-function _makeWebsiteRequest(urlstring, method, callback) {
+let awsCredentials;
+
+function _parseConfigValue(string, fileSlice) {
+    const line = fileSlice.find(element => element.indexOf(string) > -1);
+    const keyValue = line.replace(/ /g, '').split('=');
+    // the element after the '=' should be the value
+    return keyValue[1];
+}
+
+function _retrieveAWSCredentials(profile) {
+    const filename = path.join(process.env.HOME, '/.aws/scality');
+    let file;
+
+    try {
+        file = fs.readFileSync(filename, 'utf8');
+    } catch (e) {
+        const msg = `AWS credential file does not exist: ${filename}`;
+        throw new Error(msg);
+    }
+
+    const fileContents = file.split('\n');
+    const profileIndex = file.indexOf(`[${profile}]`);
+    if (profileIndex > -1) {
+        const accessKey = _parseConfigValue('aws_access_key_id',
+            fileContents.slice(profileIndex));
+        const secretKey = _parseConfigValue('aws_secret_access_key',
+            fileContents.slice(profileIndex));
+        return { accessKey, secretKey };
+    }
+    const msg = `Profile ${profile} does not exist in AWS credential file`;
+    throw new Error(msg);
+}
+
+if (process.env.AWS_ON_AIR) {
+    awsCredentials = _retrieveAWSCredentials('default');
+}
+
+function _makeWebsiteRequest(auth, method, urlstring, callback) {
+    let authCredentials;
+    if (auth === 'validAuth') {
+        authCredentials = awsCredentials || {
+            accessKey: 'accessKey1',
+            secretKey: 'verySecretKey1',
+        };
+    } else if (auth === 'invalidAuth') {
+        authCredentials = {
+            accessKey: 'fakeKey1',
+            secretKey: 'fakeSecretKey1',
+        };
+    } else if (!auth) {
+        authCredentials = undefined;
+    } else {
+        throw new Error(`Unsupported auth type ${auth}`);
+    }
     const { hostname, port, path } = url.parse(urlstring);
-    makeRequest({ hostname, port, method, path }, callback);
+    makeRequest({ hostname, port, method, path, authCredentials }, callback);
 }
 
 function _assertResponseHtml(response, elemtag, content) {
@@ -128,13 +181,17 @@ function _assertResponseHtmlIndexUser(response) {
         'extraordinary bucket website testing page');
 }
 
-function _assertResponseHtmlRedirect(response, type, redirectUrl) {
+function _assertResponseHtmlRedirect(response, type, redirectUrl, method) {
     if (type === 'redirect' || type === 'redirect-user') {
         assert.strictEqual(response.statusCode, 301);
         assert.strictEqual(response.body, '');
         assert.strictEqual(response.headers.location, redirectUrl);
     } else if (type === 'redirected-user') {
         assert.strictEqual(response.statusCode, 200);
+        if (method === 'HEAD') {
+            return;
+            // no need to check HTML
+        }
         _assertResponseHtml(response.body, 'title',
         'Best redirect link ever');
         _assertResponseHtml(response.body, 'h1',
@@ -179,8 +236,9 @@ export class WebsiteConfigTester {
         this.RoutingRules.push(newRule);
     }
 
-    static checkHTML(method, url, type, redirectUrl, bucketName, callback) {
-        _makeWebsiteRequest(url, method, (err, res) => {
+    static checkHTML(auth, method, url, type, redirectUrl, bucketName,
+        callback) {
+        _makeWebsiteRequest(auth, method, url, (err, res) => {
             assert.strictEqual(err, null, `Unexpected request err ${err}`);
             if (type) {
                 if (type.startsWith('404')) {
@@ -190,11 +248,12 @@ export class WebsiteConfigTester {
                 } else if (type.startsWith('error-user')) {
                     _assertResponseHtmlErrorUser(res, type);
                 } else if (type.startsWith('redirect')) {
-                    _assertResponseHtmlRedirect(res, type, redirectUrl);
+                    _assertResponseHtmlRedirect(res, type, redirectUrl, method);
                     if (type === 'redirect-user') {
                         process.stdout.write('Following redirect location\n');
-                        return this.checkHTML(method, res.headers.location,
-                        'redirected-user', null, null, callback);
+                        return this.checkHTML(null, method,
+                        res.headers.location, 'redirected-user', null, null,
+                        callback);
                     }
                 } else if (type === 'index-user') {
                     _assertResponseHtmlIndexUser(res);
@@ -205,6 +264,33 @@ export class WebsiteConfigTester {
             return callback();
         });
     }
+
+    /**
+     * makeHeadRequest - makes head request and asserts expected response
+     * @param {(string|null)} auth - whether to use valid, invalid,
+     * or no authentication credentials
+     * @param {string} url - request url
+     * @param {number} expectedStatusCode - expected response code
+     * @param {object} expectedHeaders - expected headers in response with
+     * expected values (e.g., {x-amz-error-code: AccessDenied})
+     * @param {string | undefined} path - path for request or undefined if none
+     * @param {function} cb - callback to end test
+     * @return {undefined}
+     */
+    static makeHeadRequest(auth, url, expectedStatusCode, expectedHeaders, cb) {
+        _makeWebsiteRequest(auth, 'HEAD', url, (err, res) => {
+            // body should be empty
+            assert.deepStrictEqual(res.body, '');
+            assert.strictEqual(res.statusCode, expectedStatusCode);
+            const headers = Object.keys(expectedHeaders);
+            for (let i = 0; i < headers.length; i++) {
+                assert.strictEqual(res.headers[headers[i]],
+                    expectedHeaders[headers[i]]);
+            }
+            return cb();
+        });
+    }
+
     static createPutBucketWebsite(s3, bucket, bucketACL, objects, done) {
         s3.createBucket({ Bucket: bucket, ACL: bucketACL },
         err => {

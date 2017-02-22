@@ -1,3 +1,5 @@
+import { auth } from 'arsenal';
+
 import http from 'http';
 import https from 'https';
 import querystring from 'querystring';
@@ -33,7 +35,7 @@ function _parseError(responseBody) {
  * @return {undefined} - and call callback
  */
 export default function makeRequest(params, callback) {
-    const { hostname, port, method, queryObj, headers, path }
+    const { hostname, port, method, queryObj, headers, path, authCredentials }
         = params;
     const options = {
         hostname,
@@ -75,6 +77,17 @@ export default function makeRequest(params, callback) {
         process.stdout.write('err sending request');
         return callback(err);
     });
+    // generate v4 headers if authentication credentials are provided
+    if (authCredentials) {
+        if (queryObj) {
+            auth.client.generateV4Headers(req, queryObj,
+                authCredentials.accessKey, authCredentials.secretKey, 's3');
+        // may update later if request may contain POST body
+        } else {
+            auth.client.generateV4Headers(req, '', authCredentials.accessKey,
+                authCredentials.secretKey, 's3');
+        }
+    }
     req.end();
 }
 
@@ -89,8 +102,10 @@ export default function makeRequest(params, callback) {
  * @return {undefined} - and call callback
  */
 export function makeS3Request(params, callback) {
-    const { method, queryObj, headers, bucket, objectKey } = params;
+    const { method, queryObj, headers, bucket, objectKey, authCredentials }
+        = params;
     const options = {
+        authCredentials,
         hostname: process.env.AWS_ON_AIR ? 's3.amazonaws.com' : ipAddress,
         port: process.env.AWS_ON_AIR ? 80 : 8000,
         method,
