@@ -58,8 +58,17 @@ docker run -d --name s3server -p 8000:8000 -e LOG_LEVEL=trace scality/s3server
 This variable specifies the Common Name `<DOMAIN_NAME>` used to create the
 Certificate Signing Request using OpenSSL. This allows you to run S3 with SSL:
 
-Note: In your `/etc/hosts` file on Linux, OS X, or Unix with root permissions),
+**Note**:
+In your `/etc/hosts` file on Linux, OS X, or Unix with root permissions),
 make sure to associate 127.0.0.1 with `<SUBDOMAIN>.<DOMAIN_NAME>`
+
+**Warning**:
+These certs, being self-signed (and the CA being generated inside the container)
+will be untrusted by any clients, and could disappear on a container upgrade.
+That's ok as long as it's for quick testing.
+Also, best security practice for non-testing would be to use an extra container
+to do SSL/TLS termination such as haproxy/nginx/stunnel to limit what an exploit
+on either component could expose, as well as certificates in a mounted volume
 
 ```shell
 docker run -d --name s3server -p 8000:8000 -e SSL=<DOMAIN_NAME> -e HOST_NAME=<SUBDOMAIN>.<DOMAIN_NAME>
